@@ -1,0 +1,27 @@
+{
+  "name": "blockchainpro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "node_1": "odemon app.js 5000 http://localhost:5000",
+    "node_2": "odemon app.js 5001 http://localhost:5001",
+    "node_3": "odemon app.js 5002 http://localhost:5002",
+    "node_4": "odemon app.js 5004 http://localhost:5003",
+    "start": "nodemon app.js 5001"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "app-root-path": "^2.2.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "express": "^4.16.4",
+    "join-path": "^1.1.1",
+    "sha256": "^0.2.0",
+    "uuid": "^3.3.2"
+  }
+}
