@@ -50,7 +50,7 @@ route.post('/register-and-broadcast-node', (req, res) => {
             uri: `${networkNodeUrl}/register-node`,
             method: 'POST',
             body: {
-                newNodeUrl
+                newNodeUrl: networkNodeUrl
             },
             json: true
         }
