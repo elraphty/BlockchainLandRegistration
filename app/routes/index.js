@@ -1,7 +1,8 @@
 const express = require('express');
 const route = express.Router();
 const blockChain = require(`${APP_ROOT_PATH}blockchain`);
-const axios = require('axios');
+// const axios = require('axios');
+const rp = require('request-promise');
 
 const blockNetwork = new blockChain();
 
@@ -45,21 +46,37 @@ route.post('/register-and-broadcast-node', (req, res) => {
 
     blockNetwork.networkNodes.forEach(networkNodeUrl => {
 
-        let req = axios.post(`${networkNodeUrl}/register-node`, {
-            newNodeUrl
-        });
+        const requestOptions = {
+            uri: `${networkNodeUrl}/register-node`,
+            method: 'POST',
+            body: {
+                newNodeUrl
+            },
+            json: true
+        }
 
-        regNodePromises.push(req);
+        regNodePromises.push(rp(requestOptions));
+
 
     });
 
     Promise.all(regNodePromises)
         .then(data => {
-            axios.post('/register-nodes-bulk', {
-                allNetworkNodes: [...blockNetwork.networkNodes, blockNetwork.currentNodeUrl]
-            })
+            const requestOptions = {
+                uri: `${newNodeUrl}/register-nodes-bulk`,
+                method: 'POST',
+                body: {
+                    allNetworkNodes: [...blockNetwork.networkNodes, blockNetwork.currentNodeUrl]
+                },
+                json: true
+            }
+
+            rp(requestOptions)
                 .then(data => {
                     res.send({ note: 'New Node registered with network successfully' });
+                })
+                .catch(e => {
+                    console.log('Error', e);
                 })
         });
 });
@@ -77,7 +94,14 @@ route.post('/register-node', (req, res) => {
 
 // register a node with the network
 route.post('/register-nodes-bulk', (req, res) => {
-    const newNodeUrl = req.body.newNodeUrl;
+    const allNetworkNodes = req.body.allNetworkNodes;
+    allNetworkNodes.forEach(networkNodeUrl => {
+        const notAlreadyPresent = blockNetwork.networkNodes.indexOf(networkNodeUrl) === -1;
+        const notCurrentNode = blockNetwork.currentNodeUrl !== networkNodeUrl;
+        if(notAlreadyPresent && notCurrentNode) blockNetwork.networkNodes.push(networkNodeUrl)
+    });
+
+    res.json({ note: 'Bulk registration successful.' });
 });
 
 module.exports = route;
