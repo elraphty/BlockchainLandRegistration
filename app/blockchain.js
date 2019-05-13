@@ -40,11 +40,19 @@ BlockChain.prototype.createNewTransaction = function(amount, sender, receipient)
     const newTransaction = {
         amount,
         sender,
-        receipient
+        receipient,
+        trasactionId: uuid().split('-').join('')
     };
 
-    this.pendingTransactions.push(newTransaction);
+    // this.pendingTransactions.push(newTransaction);
 
+    // return this.getLastBlock()['index'] + 1;
+
+    return newTransaction;
+}
+
+BlockChain.prototype.addTransactionToPendingTransactions = function(transactionObj) {
+    this.pendingTransactions.push(transactionObj);
     return this.getLastBlock()['index'] + 1;
 }
 

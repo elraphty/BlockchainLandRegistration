@@ -104,4 +104,31 @@ route.post('/register-nodes-bulk', (req, res) => {
     res.json({ note: 'Bulk registration successful.' });
 });
 
+// Post a transaction and broadcast to other networks
+router.post('/transaction/broadcast', (req, res) => {
+    const newTransaction = blockNetwork.createNewTransaction(req.body.amount, req.body.sender, req.body.receipient);
+
+    blockNetwork.addTransactionToPendingTransactions(newTransaction);
+
+    let regNodePromises = [];
+
+    blockNetwork.networkNodes.forEach(networkNodeUrl => {
+
+        const requestOptions = {
+            uri: `${networkNodeUrl}/transaction`,
+            method: 'POST',
+            body: newTransaction,
+            json: true
+        }
+
+        regNodePromises.push(rp(requestOptions));
+
+    });
+
+    Promise.all(regNodePromises)
+        .then(data => {
+            res.json({ note: 'Transaction Created and broadcast successfully' });
+        });
+});
+
 module.exports = route;
