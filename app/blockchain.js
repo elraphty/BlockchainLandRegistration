@@ -9,7 +9,7 @@ function BlockChain() {
     this.currentNodeUrl = currentNodeUrl;
     this.networkNodes =  [];
 
-    this.createNewBlock(100, '0', '0');
+    this.createNewBlock(100, '00000000000000', '0');
 }
 
 BlockChain.prototype.createNewBlock = function(nonce, previousBlockHash, hash) {
@@ -81,6 +81,10 @@ BlockChain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
     }
 
     return nonce;
+}
+
+BlockChain.prototype.chainIsValid = function(blockchain) {
+
 }
 
 module.exports = BlockChain;

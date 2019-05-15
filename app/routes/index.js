@@ -11,58 +11,105 @@ route.get('/blockchain', (req, res) => {
 });
 
 route.post('/transaction', (req, res) => {
-    const blockNetworkIndex = blockNetwork.createNewTransaction(req.body.amount, req.body.sender, req.body.receipient);
-    res.json({ note: `Transaction will be added in blockNetwork ${blockNetworkIndex}` });
+    const newTransaction = req.body;
+    const blockIndex = blockNetwork.addTransactionToPendingTransactions(newTransaction);
+    res.json({ note: `Transaction will be added in block ${blockIndex}` });
 });
 
+// Mine all pending transactions i.e Convert all pending transactions to a hash
 route.get('/mine', (req, res) => {
-    const lastblockNetwork = blockNetwork.getLastblockNetwork();
-    const previousblockNetworkHash = lastblockNetwork['hash'];
+    const lastBlock = blockNetwork.getLastBlock();
+    const previousBlockHash = lastBlock['hash'];
+    console.log('Prev Hash', previousBlockHash);
 
-    const currentblockNetworkData = {
-        index: lastblockNetwork['index'] + 1,
+    const currentBlockData = {
+        index: lastBlock['index'] + 1,
         timestamp: Date.now(),
         transactions: blockNetwork.pendingTransactions
     };
 
-    const nonce = blockNetwork.proofOfWork(previousblockNetworkHash, currentblockNetworkData);
+    const nonce = blockNetwork.proofOfWork(previousBlockHash, currentBlockData);
 
-    const blockNetworkHash = blockNetwork.hashblockNetwork(previousblockNetworkHash, currentblockNetworkData, nonce);
+    const blockHash = blockNetwork.hashBlock(previousBlockHash, currentBlockData, nonce);
 
-    const newblockNetwork = blockNetwork.createNewblockNetwork(nonce, previousblockNetworkHash, blockNetworkHash);
-
-    res.json({
-        note: 'blockNetwork mined successfully',
-        block: blockNetwork
-    });
-});
-
-// register and broadcast node to the network
-route.post('/register-and-broadcast-node', (req, res) => {
-    const newNodeUrl = req.body.newNodeUrl;
-    if(blockNetwork.networkNodes.indexOf(newNodeUrl) === -1) blockNetwork.networkNodes.push(newNodeUrl);
+    const newBlock = blockNetwork.createNewBlock(nonce, previousBlockHash, blockHash);
 
     let regNodePromises = [];
 
     blockNetwork.networkNodes.forEach(networkNodeUrl => {
 
         const requestOptions = {
+            uri: `${networkNodeUrl}/receive-new-block`,
+            method: 'POST',
+            body: newBlock,
+            json: true
+        }
+
+        regNodePromises.push(rp(requestOptions));
+    });
+
+    Promise.all(regNodePromises)
+        .then(data => {
+            res.json({
+                note: 'block mined and broadcast successfully',
+                block: newBlock
+            });
+        });
+});
+
+
+route.post('/receive-new-block', (req, res) => {
+    const newBlock = req.body;
+    const lastBlock = blockNetwork.getLastBlock();
+    const correctHash = lastBlock.hash === newBlock.previousBlockHash;
+    const correctIndex = lastBlock['index'] + 1 === newBlock['index'];
+    
+    if(correctHash && correctIndex) {
+        blockNetwork.chain.push(newBlock);
+        blockNetwork.pendingTransactions = [];
+
+        res.json({
+            note: 'New block received and accepeted',
+            newBlock: newBlock
+        });
+    } else {
+        res.json({
+            note: 'New block rejected',
+            newBlock: newBlock
+        });
+    }
+});
+
+// register and broadcast node to the network
+route.post('/register-and-broadcast-node', (req, res) => {
+    const newNodeUrl = req.body.newNodeUrl;
+    // const notCurrentNode = newNodeUrl !== blockNetwork.currentNodeUrl;
+
+    if(blockNetwork.networkNodes.indexOf(newNodeUrl) == -1) blockNetwork.networkNodes.push(newNodeUrl);
+    
+    let regNodePromises = [];
+
+    blockNetwork.networkNodes.forEach(networkNodeUrl => {
+        // console.log('Network nodes', networkNodeUrl);
+
+        let requestOptions = {
             uri: `${networkNodeUrl}/register-node`,
             method: 'POST',
             body: {
-                newNodeUrl: networkNodeUrl
+                newNodeUrl: newNodeUrl
             },
             json: true
         }
 
         regNodePromises.push(rp(requestOptions));
 
-
     });
+
+    // console.log('Reg Node promises count', regNodePromises.length);
 
     Promise.all(regNodePromises)
         .then(data => {
-            const requestOptions = {
+            const bulkRequestOptions = {
                 uri: `${newNodeUrl}/register-nodes-bulk`,
                 method: 'POST',
                 body: {
@@ -71,19 +118,20 @@ route.post('/register-and-broadcast-node', (req, res) => {
                 json: true
             }
 
-            rp(requestOptions)
-                .then(data => {
-                    res.send({ note: 'New Node registered with network successfully' });
-                })
-                .catch(e => {
-                    console.log('Error', e);
-                })
-        });
+            return rp(bulkRequestOptions)
+        })
+        .then(data => {
+            res.send({ note: 'New Node registered with network successfully' });
+        })
+        .catch(e => {
+            console.log('Error', e);
+        })
 });
 
 // register a node with the network
 route.post('/register-node', (req, res) => {
     const newNodeUrl = req.body.newNodeUrl;
+    // console.log('Icoming Data', newNodeUrl);
     const notAlreadyPresent = blockNetwork.networkNodes.indexOf(newNodeUrl) === -1;
     const notCurrentNode = blockNetwork.currentNodeUrl !== newNodeUrl;
 
@@ -95,6 +143,7 @@ route.post('/register-node', (req, res) => {
 // register a node with the network
 route.post('/register-nodes-bulk', (req, res) => {
     const allNetworkNodes = req.body.allNetworkNodes;
+    // console.log('all nodes', allNetworkNodes);
     allNetworkNodes.forEach(networkNodeUrl => {
         const notAlreadyPresent = blockNetwork.networkNodes.indexOf(networkNodeUrl) === -1;
         const notCurrentNode = blockNetwork.currentNodeUrl !== networkNodeUrl;
@@ -105,7 +154,7 @@ route.post('/register-nodes-bulk', (req, res) => {
 });
 
 // Post a transaction and broadcast to other networks
-router.post('/transaction/broadcast', (req, res) => {
+route.post('/transaction/broadcast', (req, res) => {
     const newTransaction = blockNetwork.createNewTransaction(req.body.amount, req.body.sender, req.body.receipient);
 
     blockNetwork.addTransactionToPendingTransactions(newTransaction);
