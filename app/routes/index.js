@@ -20,11 +20,10 @@ route.post('/transaction', (req, res) => {
 route.get('/mine', (req, res) => {
     const lastBlock = blockNetwork.getLastBlock();
     const previousBlockHash = lastBlock['hash'];
-    console.log('Prev Hash', previousBlockHash);
+    // console.log('Prev Hash', previousBlockHash);
 
     const currentBlockData = {
         index: lastBlock['index'] + 1,
-        timestamp: Date.now(),
         transactions: blockNetwork.pendingTransactions
     };
 
@@ -177,6 +176,54 @@ route.post('/transaction/broadcast', (req, res) => {
     Promise.all(regNodePromises)
         .then(data => {
             res.json({ note: 'Transaction Created and broadcast successfully' });
+        });
+});
+
+route.get('/consesus', (req, res) => {
+
+    let regNodePromises = [];
+
+    blockNetwork.networkNodes.forEach(networkNodeUrl => {
+
+        const requestOptions = {
+            uri: `${networkNodeUrl}/blockchain`,
+            method: 'GET',
+            json: true
+        }
+
+        regNodePromises.push(rp(requestOptions));
+
+    });
+
+    Promise.all(regNodePromises)
+        .then(blockchains => {
+            const currentChainLength = blockNetwork.chain.length;
+            let maxChainLength = currentChainLength;
+            let newLongestChain = null;
+            let newPendingTransactions = null;
+
+            blockchains.forEach(blockchain => {
+                if(blockchain.chain.length > maxChainLength) {
+                    maxChainLength = blockchain.chain.length;
+                    newLongestChain = blockchain.chain;
+                    newPendingTransactions = blockchain.pendingTransactions;
+                }
+            });
+
+            if(!newLongestChain || (newLongestChain && !blockNetwork.chainIsValid(newLongestChain))) {
+                res.json({
+                    note: 'Current chain as not been replaced',
+                    chain: blockNetwork.chain
+                });
+            } else if(newLongestChain && blockNetwork.chainIsValid(newLongestChain)) {
+                blockNetwork.chain = newLongestChain;
+                blockNetwork.pendingTransactions = newPendingTransactions;
+
+                res.json({
+                    note: 'This chain has been replaced',
+                    chain: blockNetwork.chain
+                });
+            }
         });
 });
 

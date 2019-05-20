@@ -9,7 +9,7 @@ function BlockChain() {
     this.currentNodeUrl = currentNodeUrl;
     this.networkNodes =  [];
 
-    this.createNewBlock(100, '00000000000000', '0');
+    this.createNewBlock(2000, 'IIIIIOOOOOOOO', 'HHHHHHHHYYYY');
 }
 
 BlockChain.prototype.createNewBlock = function(nonce, previousBlockHash, hash) {
@@ -84,7 +84,41 @@ BlockChain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
 }
 
 BlockChain.prototype.chainIsValid = function(blockchain) {
+    let validChain = true;
 
+    for(let i = 1; i < blockchain.length; i++) {
+        const currentBlock = blockchain[i];
+        const prevBlock = blockchain[i - 1];
+
+        const blockHash = this.hashBlock(prevBlock['hash'], 
+            {
+                index: currentBlock['index'],
+                transactions: currentBlock['transactions'],
+            },
+
+            currentBlock['nonce']
+        );
+
+        // console.log('current Block', currentBlock);
+
+        if(blockHash.substring(0, 4) !== process.env.SECRET_CODE) validChain = false;
+        if(currentBlock['previousBlockHash'] !== prevBlock['hash']) validChain = false; // chain not valid
+        
+    }
+
+    const genesisBlock = blockchain[0];
+
+    const correctNonce = genesisBlock['nonce'] === 2000;
+    const correctPreviousHash = genesisBlock['previousBlockHash'] === 'IIIIIOOOOOOOO';
+    const correctHash = genesisBlock['hash'] === 'HHHHHHHHYYYY';
+    const correctTransactions = genesisBlock['transactions'].length === 0;
+
+    if(!correctNonce || !correctPreviousHash || !correctHash || !correctTransactions) {
+        console.log('Lastcheck incorect');
+        validChain = false;
+    }
+
+    return validChain;
 }
 
 module.exports = BlockChain;

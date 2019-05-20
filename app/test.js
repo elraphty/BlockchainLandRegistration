@@ -2,38 +2,42 @@ const BlockChain = require('./blockchain');
 
 const block = new BlockChain();
 
-// block.createNewBlock(2380, 'UUUUUUUU', 'XXXXXXXXXXXXX');
+const blockData = {
+    "chain": [
+        {
+            "index": 1,
+            "timestamp": 1557959871569,
+            "transactions": [],
+            "nonce": 2000,
+            "hash": "HHHHHHHHYYYY",
+            "previousBlockHash": "IIIIIOOOOOOOO"
+        },
+        {
+            "index": 2,
+            "timestamp": 1557959924762,
+            "transactions": [
+                {
+                    "amount": 7000,
+                    "sender": "UUUUUUUUUUUUUYYYii",
+                    "receipient": "TTTTTTTTTTTTUU00",
+                    "trasactionId": "1bdf2520776211e99b5269b31a4d89a5"
+                },
+                {
+                    "amount": 10000,
+                    "sender": "UUUUUUUUUUUUUYYYii",
+                    "receipient": "TTTTTTTTTTTTUU00",
+                    "trasactionId": "20966ba0776211e99b5269b31a4d89a5"
+                }
+            ],
+            "nonce": 49743,
+            "hash": "01748bc360cf0e1cf5d0983ddf26edd32f0f902afe5377d7943c597d0684fcb2",
+            "previousBlockHash": "HHHHHHHHYYYY"
+        }
+    ],
+    "pendingTransactions": [],
+    "currentNodeUrl": "http://localhost:5000",
+    "networkNodes": []
+}
 
-// block.createNewTransaction(100, 'LOVRYUUUUUUUUUUU', 'UUUUUUUUUUU');
 
-// block.createNewBlock(23801, '11UUUUUUUU', '222XXXXXXXXXXXXX');
-
-// const hash = block.hashBlock('HHHHHHHHHHHHHHHH', [{
-//     id: 1,
-//     name: 'Raph'
-// }], 70000)
-
-// console.log(hash);
-
-const previousBlockHash = 'OUUUUUIUIIIIIIIIHHHHHHHHHHHHHHH';
-
-const currentBlockData = [
-    {
-        amount: 101,
-        sender: 'UUUUUUUUUUUUUUUUKK',
-        receipient: 'OOOOOOOOOOOOOOOOPPP'
-    },
-    {
-        amount: 7888,
-        sender: 'UUUUUUUUUUUUUUUUPPPKK',
-        receipient: 'OOOOOOOOOOOOOOOOOOOPPP'
-    },
-    {
-        amount: 9000,
-        sender: 'UUUUUUUUUUUUUUUUPIIIIIII',
-        receipient: 'OOOOOOOOOOOOOOOOOOOPPPII'
-    },
-];
-
-//console.log(block.proofOfWork(previousBlockHash, currentBlockData));
-console.log(block.hashBlock(previousBlockHash, currentBlockData, '2981193'))
+console.log('Valid', block.chainIsValid(blockData.chain));
