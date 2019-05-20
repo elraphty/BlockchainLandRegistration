@@ -121,4 +121,13 @@ BlockChain.prototype.chainIsValid = function(blockchain) {
     return validChain;
 }
 
+BlockChain.prototype.getBlock = function(blockHash) {
+    let correctBlock = null;
+    this.chain.find((block, i) => {
+        if(block.hash === blockHash) correctBlock = block;
+    });
+
+    return correctBlock;
+}
+
 module.exports = BlockChain;

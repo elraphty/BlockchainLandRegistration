@@ -227,4 +227,22 @@ route.get('/consesus', (req, res) => {
         });
 });
 
+route.get('/block/:blockHash', (req, res) => {
+    const blockHash = req.params.blockHash;
+    const correctBlock = blockNetwork.getBlock(blockHash);
+
+    res.json({
+        block: correctBlock
+    });
+
+});
+
+route.get('/transaction/:transactionId', (req, res) => {
+
+});
+
+route.get('/address/:address', (req, res) => {
+
+});
+
 module.exports = route;
