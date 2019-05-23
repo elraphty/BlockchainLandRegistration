@@ -41,7 +41,7 @@ BlockChain.prototype.createNewTransaction = function(amount, sender, receipient)
         amount,
         sender,
         receipient,
-        trasactionId: uuid().split('-').join('')
+        transactionId: uuid().split('-').join('')
     };
 
     // this.pendingTransactions.push(newTransaction);
@@ -128,6 +128,29 @@ BlockChain.prototype.getBlock = function(blockHash) {
     });
 
     return correctBlock;
+}
+
+BlockChain.prototype.getTransaction = function(transactionId) {
+    let correctTransaction = null;
+    let correctBlock = null;
+
+    console.log('Transactionid', transactionId);
+
+    this.chain.forEach((block) => {
+        console.log('block', block);
+        block.transactions.find(transaction => {
+            console.log('Transaction', transaction);
+            if(transaction.transactionId === transactionId) {
+                correctTransaction = transaction;
+                correctBlock = block;
+            }
+        });
+    });
+
+    return {
+        transaction: correctTransaction,
+        block: correctBlock
+    };
 }
 
 module.exports = BlockChain;

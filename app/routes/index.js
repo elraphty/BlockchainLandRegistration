@@ -238,7 +238,13 @@ route.get('/block/:blockHash', (req, res) => {
 });
 
 route.get('/transaction/:transactionId', (req, res) => {
+    const transactionId = req.params.transactionId;
+    const transactionData = blockNetwork.getTransaction(transactionId);
 
+    res.json({
+        transaction: transactionData.transaction,
+        block: transactionData.block
+    });
 });
 
 route.get('/address/:address', (req, res) => {
