@@ -248,7 +248,13 @@ route.get('/transaction/:transactionId', (req, res) => {
 });
 
 route.get('/address/:address', (req, res) => {
+    const address = req.params.address;
 
+    const addressData = blockNetwork.getAddressData(address);
+
+    res.json({
+        addressData
+    });
 });
 
 module.exports = route;

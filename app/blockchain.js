@@ -153,4 +153,26 @@ BlockChain.prototype.getTransaction = function(transactionId) {
     };
 }
 
+BlockChain.prototype.getAddressData = function(address) {
+    const addressTransactions = [];
+    this.chain.forEach(block => {
+        block.transactions.forEach(transaction => {
+            if(transaction.sender === address || transaction.receipient === address) {
+                addressTransactions.push(transaction)
+            }
+        });
+    });
+
+    let balance = 0;
+    addressTransactions.forEach(transaction =>{ 
+        if(transaction.receipient === address) balance += transaction.amount;
+        else if(transaction.sender === address) balance -= transaction.amount;
+    });
+
+    return {
+        addressTransactions,
+        balance
+    }
+}
+
 module.exports = BlockChain;
