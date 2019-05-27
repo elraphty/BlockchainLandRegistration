@@ -1,10 +1,15 @@
 const express = require('express');
 const route = express.Router();
 const blockChain = require(`${APP_ROOT_PATH}blockchain`);
-// const axios = require('axios');
 const rp = require('request-promise');
+const path = require('path');
 
 const blockNetwork = new blockChain();
+
+
+route.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views/index.html'));
+});
 
 route.get('/blockchain', (req, res) => {
     res.send(blockNetwork);
